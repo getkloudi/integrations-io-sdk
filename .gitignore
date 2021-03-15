@@ -1,0 +1,12 @@
+node_modules/
+*.log
+test.js
+keys/
+.env
+.env.docker
+build/
+.vscode/settings.json
+*dialogflow-key.json
+tmp/
+third-party/
+third-party-keys

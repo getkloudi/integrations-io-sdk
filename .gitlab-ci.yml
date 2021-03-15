@@ -1,0 +1,38 @@
+image: node:10.15.3-jessie
+before_script:
+  - apt-get update -y
+  - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+  - eval $(ssh-agent -s)
+
+stages:
+  - deploy
+
+staging:
+  stage: deploy
+  environment:
+    name: staging
+  only:
+    - dev
+  script:
+    - echo "$STAGING_SSH_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan "$STAGING_SSH_HOST" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - ssh-add <(echo "$STAGING_SSH_KEY")
+    - ssh ubuntu@"$STAGING_SSH_HOST" 'bash -s' < deploy.staging.sh
+
+production:
+  stage: deploy
+  environment:
+    name: production
+  only:
+    - main
+  script:
+    - echo "$PRODUCTION_SSH_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan "$PRODUCTION_SSH_HOST" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - ssh-add <(echo "$PRODUCTION_SSH_KEY")
+    - ssh ubuntu@"$PRODUCTION_SSH_HOST" 'bash -s' < deploy.production.sh
